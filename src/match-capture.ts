@@ -178,7 +178,7 @@ export class MatchCapture
   // capture_object or capture_array.
   // Which every property is captured to, the interface of the capture item is the
   // same. {bx, lx, text, obj, arr }.
-  capture_object?: captureObject_interface;
+  capture_object: captureObject_interface;
   capture_array: {}[] | undefined;
 
   captureToArray: boolean | undefined ;
@@ -222,6 +222,10 @@ export class MatchCapture
       {
         this.capture_object = options.capture_object;
       }
+      else
+      {
+        this.capture_object = {} ;
+      }
 
       // the capture_object of this captureBegin object will be stored in the
       // capture_object of the parent in property captureName.
@@ -232,11 +236,9 @@ export class MatchCapture
       if ( options.doCapture )
         this.doCapture = options.doCapture ;
     }
-
-    // create capture_object
-    if ( !this.capture_object )
+    else
     {
-      this.capture_object = {} ;
+      this.capture_object = {};
     }
   }
 
@@ -910,19 +912,22 @@ public angleBracketName(options?: MatchCapture_options)
   // run the methods stored in the repeat array property of this state object.
   public repeat_runMethod()
   {
-    for (let ix = 0; ix < this.repeat.length; ++ix)
+    if ( this.repeat )
     {
-      const item = this.repeat[ix];
+      for (let ix = 0; ix < this.repeat.length; ++ix)
+      {
+        const item = this.repeat[ix];
 
-      const method = item.method;
+        const method = item.method;
 
-      // method stores a reference to the method to be run.
-      // use call method of this method reference to set the "this" of the called 
-      // method.
-      if (item.parm2)
-        method.call(this, item.parm1, { ...item.parm2, isRepeatRun: true });
-      else
-        method.call(this, { ...item.parm1, isRepeatRun: true });
+        // method stores a reference to the method to be run.
+        // use call method of this method reference to set the "this" of the called 
+        // method.
+        if (item.parm2)
+          method.call(this, item.parm1, { ...item.parm2, isRepeatRun: true });
+        else
+          method.call(this, { ...item.parm1, isRepeatRun: true });
+      }
     }
   }
 
@@ -1193,24 +1198,4 @@ public ruxRoutine( userRoutine: ( matchCapture:MatchCapture, ix:number) => void 
 
     return this;
   }
-
-  // --------------------------------- MatchCapture.getCaptureText -------------------------------
-  // drill down into match capture object, looking for capture name and returning its text value.
-  public static getCaptureText(obj:{}, propName:string)
-  {
-    for( const key of Object.keys(obj))
-    {
-      if ( key == 'obj')
-      {
-        const text = MatchCapture.getCaptureText( obj[key], propName );
-        return text ;
-      }
-      else if ( key == propName )
-      {
-        const textObj = obj[propName] ;
-        return textObj.text ;
-      }
-    }
-  }
-
 };
