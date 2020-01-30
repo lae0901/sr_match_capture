@@ -1,9 +1,9 @@
 {
   "name": "sr_match_capture",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "match-capture typescript class",
-  "main": "lib/core.js",
-  "types": "lib/core.d.ts",
+  "main": "lib/match-capture.js",
+  "types": "lib/match-capture.d.ts",
   
   "scripts": {
     "test": "jest --config jestconfig.json",
