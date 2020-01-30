@@ -1,20 +1,26 @@
 {
   "name": "sr_match_capture",
   "version": "1.0.0",
-  "description": "# steve",
-  "main": "index.js",
+  "description": "match-capture typescript class",
+  "main": "lib/core.js",
+  "types": "lib/core.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lae0901/sr_match_capture.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "stephen richter",
+  "license": "UNLICENSED",
+
   "bugs": {
     "url": "https://github.com/lae0901/sr_match_capture/issues"
   },
-  "homepage": "https://github.com/lae0901/sr_match_capture#readme"
+  "homepage": "https://github.com/lae0901/sr_match_capture#readme",
+  "dependencies": {
+    "sr_core_ts": "^1.18.0"
+  }
 }
