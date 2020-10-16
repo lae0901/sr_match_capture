@@ -281,7 +281,7 @@ public angleBracketName(options?: MatchCapture_options)
     const skip = this.instructionSetup();
     const bypassAll = (skip == true) ? true : false;
     const child = new MatchCapture(this.text, this.index,
-      { ...options, parent: this, name, bypassAll });
+      { ...options, parent: this, bypassAll });
 
     // store the child MatchCapture in capture array of parent.                              
     if (!this.capture)

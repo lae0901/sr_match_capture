@@ -4,14 +4,12 @@
   "description": "match-capture typescript class",
   "main": "lib/match-capture.js",
   "types": "lib/match-capture.d.ts",
-  
   "scripts": {
-    "test": "jest --config jestconfig.json",
+    "test": "node ./lib/tester.js",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json"
   },
-  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lae0901/sr_match_capture.git"
@@ -28,6 +26,7 @@
   },
   "devDependencies": {
     "prettier": "^1.19.1",
+    "sr_test_framework": "^1.0.12",
     "tslint": "^6.0.0",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.7.5"
