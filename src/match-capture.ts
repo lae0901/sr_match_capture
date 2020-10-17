@@ -46,6 +46,7 @@
 //       to continue.
 
 import {scan_charNeAll, rxp, regex_exec} from 'sr_core_ts';
+export { iMatchCapture, iMatchItem, matchArr_match } from './array-match';
 
 interface onMatch_interface
 {

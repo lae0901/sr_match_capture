@@ -1,8 +1,11 @@
 // ./src/text-match.ts
 
 import { scan_charNeAll, rxp, regex_exec } from 'sr_core_ts';
-type MatchOper = 'identifier' | 'text' | 'or' | 'captureBegin' | 'captureEnd' |
-              'repeatBegin' | 'repeatEnd' | 'repeatMatchText';
+type MatchOper = 'identifier' | 'literal' | 'text' | 'or' | 
+                'captureBegin' | 'captureEnd' |
+                'repeatBegin' | 'repeatEnd' | 'repeatMatchText';
+
+type InstructionType = 'match' | 'or' | 'control' ;                
 
 // --------------------------------- iMatchCapture ---------------------------------
 export interface iMatchCapture
@@ -49,6 +52,9 @@ export interface iMatchState
 
   repeatBegin_arrIndex?: number;
   repeat_captureName?:string;
+
+  // group of or match instructions being evaluated. 
+  or_active?: boolean;
 }
 
 // --------------------------------- matchArr_match ---------------------------------
@@ -61,16 +67,22 @@ export function matchArr_match( text: string, bx:number,
   const state: iMatchState = {text, index:bx, found:-1, isMatch:true, matchFail:false, capture:{} };
   if ( capture )
     state.capture = capture ;
-  state.matchArr_index = 0 ;
+  state.matchArr_index = -1 ;
 
-  while( state.matchArr_index < matchArr.length )
+  while( true )
   {
-    const item = matchArr[ state.matchArr_index ] ;
     state.matchArr_index += 1 ;
+    if ( state.matchArr_index >= matchArr.length )
+      break ;
+    const item = matchArr[ state.matchArr_index ] ;
 
     if ( item.oper == 'identifier')
     {
       match_identifier( state, item ) ;
+    }
+    else if (item.oper == 'literal')
+    {
+      match_literal(state, item);
     }
     else if ( item.oper == 'text')
     {
@@ -78,7 +90,7 @@ export function matchArr_match( text: string, bx:number,
     }
     else if ( item.oper == 'repeatBegin')
     {
-      match_repeatBegin( state, item, mx ) ;
+      match_repeatBegin( state, item, state.matchArr_index ) ;
     }
     else if ( item.oper == 'repeatMatchText')
     {
@@ -86,21 +98,86 @@ export function matchArr_match( text: string, bx:number,
     }
     else if ( item.oper == 'repeatEnd')
     {
+      match_repeatEnd(state, item );
+    }
+    else if (item.oper == 'or')
+    {
+      match_or(state, item);
     }
   }
   return state ;
 }
 
+// ------------------------------- instructionSetup -------------------------------
+function instructionSetup( state: iMatchState, item: iMatchItem, 
+                instructionType: InstructionType = 'match' )
+{
+  let skip = false ;
+
+  // clear or_active flag if not a match instruction.
+  if ( instructionType != 'match')
+    state.or_active = false ;
+
+  if ( state.matchFail )
+    skip = true ;
+
+  else if ( state.or_active )
+  {
+    if ( state.isMatch == true )
+      skip = true ;
+    state.or_active = false ;  // next instruction, or_active will be off.
+  }
+
+  else if ( instructionType == 'or')
+  {
+    skip = false ;
+  }
+
+  else if ( !state.isMatch )
+  {
+    state.matchFail = true ;
+    skip = true ;
+  }
+
+  return skip ;
+}
+
 // ---------------------------- match_identifier ----------------------------------
 // options: { captureName, skipSetup }
-function match_identifier( matchState: iMatchState, item: iMatchItem )
+function match_identifier( state: iMatchState, item: iMatchItem )
 {
-  if ( matchState.isMatch )
+  if ( !state.matchFail )
   {
     // first char is letter, the zero or more word characters.
     const regexp_pattern = '[A-Za-z_]' + rxp.zeroMoreWord;
 
-    match_regExp( matchState, item, regexp_pattern);
+    match_regExp( state, item, regexp_pattern);
+  }
+}
+
+// ---------------------------- match_literal ----------------------------------
+  // a quoted or numeric literal.
+function match_literal(state: iMatchState, item: iMatchItem)
+{
+  if (!state.matchFail)
+  {
+    const regexp_pattern = rxp.beginCapture + rxp.oneMoreDigits + rxp.endCapture +
+      rxp.or +
+      rxp.beginCapture + rxp.singleQuoteQuoted + rxp.endCapture +
+      rxp.or + rxp.doubleQuoteQuoted;
+    match_regExp(state, item, regexp_pattern);
+  }
+}
+
+// ---------------------------- match_or ----------------------------------
+// or match. If last match was false, reset to true to enable the next
+// match to run and set isMatch to true or false.  
+function match_or(state: iMatchState, item: iMatchItem)
+{
+  let skip = instructionSetup(state, item, 'or');
+  if (!skip)
+  {
+    state.or_active = true ;
   }
 }
 
@@ -113,13 +190,8 @@ function match_identifier( matchState: iMatchState, item: iMatchItem )
 function match_regExp(  state: iMatchState, item: iMatchItem, 
                         regexp: string | RegExp )
 {
-  let skip = false ;
-  if ( state.matchFail )
-  {
-    skip = true ;
-  }
-
-  if (skip == false)
+  let skip = instructionSetup( state, item, 'match' ) ;
+  if (!skip)
   {
     let ix = state.index;
 
@@ -153,11 +225,7 @@ function match_regExp(  state: iMatchState, item: iMatchItem,
 // arrIndex: index into matchArr array of this match item.
 function match_repeatBegin(state: iMatchState, item: iMatchItem, arrIndex:number )
 {
-  let skip = false;
-  if (state.matchFail)
-  {
-    skip = true;
-  }
+  let skip = instructionSetup(state, item, 'control');
 
   if (skip == false)
   {
@@ -176,77 +244,40 @@ function match_repeatBegin(state: iMatchState, item: iMatchItem, arrIndex:number
   }
 }
 
+// ------------------------------- match_repeatEnd -------------------------------
+// end of repeat block. clear out repeat fields in the state object.
+function match_repeatEnd(state: iMatchState, item: iMatchItem)
+{
+  let skip = instructionSetup(state, item, 'control');
+
+  if (skip == false)
+  {
+    state.repeatBegin_arrIndex = -1;
+    state.repeat_captureName = '';
+  }
+}
+
 // ------------------------------- match_repeatMatchText -----------------------------
 // match specific text at the current location.
 // options: { captureName, zeroMatchOk, skipSetup, zeroMoreWhitespace:true,
 //            peek:true, onMatch, doCapture:true }
 function match_repeatMatchText(state: iMatchState, item: iMatchItem)
 {
-  let skip = false;
-  if (state.matchFail)
-  {
-    skip = true;
-  }
-
+  let skip = instructionSetup(state, item, 'match');
   if (skip == false)
   {
-    let ix = state.index;
-
-    // advance past any whitespace.
-    if (item.zeroMoreWhitespace)
+    const { matchText, matchIx } = tm_actual(state, item);
+    if (matchIx >= 0)
     {
-      ix = scan_charNeAll(state.text, ix, ' \t\n');
-      if (ix == -1)
-        ix = state.text.length;
-    }
+      processMatchTrue(state, item, matchIx, matchText.length);
 
-    const remLx = state.text.length - ix;
-    if (remLx <= 0)
-      state.isMatch = false;
+      // repeatMatch. set instruction array index back to start of repeat.
+      state.matchArr_index = state.repeatBegin_arrIndex!;
+    }
     else
     {
-
-      // matchText is an array. match to one of the array items.
-      if (Array.isArray(item.text))
-      {
-        let matchFound = false;
-
-        for (let mx = 0; mx < item.text.length; ++mx)
-        {
-          const textItem = item.text[mx];
-          const lx = textItem.length;
-          if (remLx >= lx)
-          {
-            if (state.text.substr(ix, lx) == textItem)
-            {
-              matchFound = true;
-              break;
-            }
-          }
-        }
-
-        // no match against any items in matchText array.
-        if (matchFound == false)
-        {
-          processMatchFalse(state, item);
-        }
-      }
-
-      // match to matchText.
-      else if (item.text)
-      {
-        const lx = item.text.length;
-        if (remLx < lx)
-          state.isMatch = false;
-        else if (state.text.substr(ix, lx) == item.text)
-        {
-          processMatchTrue(state, item, ix, lx);
-        }
-        else
-        {
-          processMatchFalse(state, item);
-        }
-      }
+      // match false does not mark entire match as fail. Simply continue
+      // on without repeat.
     }
   }
 }
@@ -257,72 +288,17 @@ function match_repeatMatchText(state: iMatchState, item: iMatchItem)
 //            peek:true, onMatch, doCapture:true }
 function match_text( state:iMatchState, item:iMatchItem )
 {
-  let skip = false;
-  if (state.matchFail)
-  {
-    skip = true;
-  }
-
+  let skip = instructionSetup(state, item, 'match');
   if (skip == false)
   {
-    let ix = state.index;
-
-    // advance past any whitespace.
-    if (item.zeroMoreWhitespace)
+    const { matchText, matchIx } = tm_actual(state, item ) ;
+    if (matchIx >= 0)
     {
-      ix = scan_charNeAll(state.text, ix, ' \t\n');
-      if (ix == -1)
-        ix = state.text.length;
+      processMatchTrue(state, item, matchIx, matchText.length);
     }
-
-    const remLx = state.text.length - ix;
-    if (remLx <= 0 )
-      state.isMatch = false;
     else
     {
-
-      // matchText is an array. match to one of the array items.
-      if (Array.isArray( item.text ))
-      {
-        let matchFound = false;
-
-        for (let mx = 0; mx < item.text.length; ++mx)
-        {
-          const textItem = item.text[mx];
-          const lx = textItem.length;
-          if (remLx >= lx)
-          {
-            if ( state.text.substr(ix, lx) == textItem)
-            {
-              processMatchTrue( state, item, ix, lx);
-              matchFound = true;
-              break;
-            }
-          }
-        }
-
-        // no match against any items in matchText array.
-        if (matchFound == false)
-        {
-          processMatchFalse( state, item);
-        }
-      }
-
-      // match to matchText.
-      else if ( item.text )
-      {
-        const lx = item.text.length;
-        if (remLx < lx)
-          state.isMatch = false;
-        else if ( state.text.substr(ix, lx) == item.text )
-        {
-          processMatchTrue( state, item, ix, lx);
-        }
-        else
-        {
-          processMatchFalse( state, item );
-        }
-      }
+      processMatchFalse(state, item);
     }
   }
 }
@@ -433,11 +409,56 @@ function processMatchTrue( state:iMatchState, item: iMatchItem, bx: number, lx: 
         vlu.push(match_text) ;
       }
     }
+  }
+}
 
-    // repeatMatch. set instruction array index back to start of repeat.
-    if (  item.oper == 'repeatMatchText')
+// ------------------------------- tm_actual -------------------------------
+function tm_actual(state: iMatchState, item: iMatchItem )
+{
+  let matchText = '' ;
+  let matchIx = -1 ;
+
+  let ix = state.index;
+
+  // advance past any whitespace.
+  if (item.zeroMoreWhitespace)
+  {
+    ix = scan_charNeAll(state.text, ix, ' \t\n');
+    if (ix == -1)
+      ix = state.text.length;
+  }
+
+  const remLx = state.text.length - ix;
+
+  // matchText is an array. match to one of the array items.
+  if (Array.isArray(item.text))
+  {
+    for (let mx = 0; mx < item.text.length; ++mx)
     {
-      state.matchArr_index = state.repeatBegin_arrIndex! + 1 ;
+      const textItem = item.text[mx];
+      const lx = textItem.length;
+      if (remLx >= lx)
+      {
+        if (state.text.substr(ix, lx) == textItem)
+        {
+          matchText = textItem ;
+          matchIx = ix ;
+          break ;
+        }
+      }
     }
   }
+
+  // match to matchText.
+  else if (item.text)
+  {
+    const lx = item.text.length;
+    if ((remLx >= lx) && (state.text.substr(ix, lx) == item.text))
+    {
+      matchText = item.text ;
+      matchIx = ix ;
+    }
+  }
+
+  return { matchText, matchIx } ;
 }
