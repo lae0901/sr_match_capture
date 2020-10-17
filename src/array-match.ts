@@ -21,6 +21,10 @@ export interface iMatchItem
   
   captureName?: string;
   doCapture?: boolean;
+  
+  // capture meta info with capture text. Capture property is an object with
+  // properties: {bx, lx, text}
+  meta?: boolean;
 
   zeroMoreWhitespace?: boolean;
   peekNextText?: string;
@@ -397,7 +401,15 @@ function processMatchTrue( state:iMatchState, item: iMatchItem, bx: number, lx: 
     // capture to property in capture object.
     if ( item.captureName)
     {
-      state.capture[item.captureName] = match_text;
+      if ( item.meta )
+      {
+        const meta = {bx, lx, text:match_text};
+        state.capture[item.captureName] = meta;
+      }
+      else
+      {
+        state.capture[item.captureName] = match_text;
+      }
     }
 
     // repeat capture. Capture to array in capture object.

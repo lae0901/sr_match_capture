@@ -58,16 +58,21 @@ function arrayMatch_test()
       { oper: 'identifier', captureName: 'keyword', zeroMoreWhitespace: true },
       { oper: 'text', text: '(', zeroMoreWhitespace: false },
       { oper: 'repeatBegin', captureName:'args'},
-      { oper: 'identifier', doCapture:true, zeroMoreWhitespace: true },
+      { oper: 'identifier', doCapture:true, meta:true, zeroMoreWhitespace: true },
       { oper: 'or' },
-      { oper: 'literal', doCapture:true, zeroMoreWhitespace: true },
+      { oper: 'literal', doCapture:true, meta:true, zeroMoreWhitespace: true },
       { oper: 'repeatMatchText', text:':', zeroMoreWhitespace:true},
       { oper: 'repeatEnd' },
       { oper: 'text', text: ')', zeroMoreWhitespace: true },
     ]
-    const text = 'overlay(sditno:jim:25)';
+    const text = 'overlay(sditno:\'jim\':25)';
     const match = matchArr_match(text, 0, arr );
     const { keyword, args } = match.capture ;
+
+    for( const arg of args as string[] )
+    {
+      console.log(`arg ${arg}`);
+    }
 
     // match keyword with paren enclosed identifier
     const method = 'matchArr_match';
