@@ -22,10 +22,11 @@
   },
   "homepage": "https://github.com/lae0901/sr_match_capture#readme",
   "dependencies": {
-    "sr_core_ts": "^1.18.0"
+    "sr_core_ts": "^1.46.41"
   },
   "devDependencies": {
-    "sr_test_framework": "^1.0.12",
+    "@types/node": "^14.11.10",
+    "sr_test_framework": "^1.0.15",
     "typescript": "^4.0.3"
   }
 }

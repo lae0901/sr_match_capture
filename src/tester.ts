@@ -1,4 +1,5 @@
 import {testResults_append, testResults_consoleLog, testResults_new } from 'sr_test_framework';
+import { iMatchCapture, iMatchItem, matchArr_match } from './array-match';
 import { MatchCapture, captureItem_interface, MatchCapture_options, captureObject_interface }
   from './match-capture';
 
@@ -16,7 +17,67 @@ async function async_main( )
     results.push( ...res ) ;
   }
 
+  // match using matchArr method.
+  {
+    const res = arrayMatch_test( );
+    results.push(...res);
+  }
+
   testResults_consoleLog( results ) ;
+}
+
+// -------------------------------- arrayMatch_test --------------------------------
+function arrayMatch_test()
+{
+  const results = testResults_new();
+  
+  // matchArr with simple keyword enclosed value.
+  {
+    const arr: iMatchItem[] = [
+      {oper:'identifier', captureName:'keyword', zeroMoreWhitespace:true},
+      {oper:'text', text:'(', zeroMoreWhitespace:false},
+      {oper:'identifier', captureName: 'vlu', zeroMoreWhitespace: true },
+      { oper: 'text', text: ')', zeroMoreWhitespace: true },
+    ]
+    const text = 'overlay(sditno)';
+    const cap: iMatchCapture = {} ;
+    const match = matchArr_match(text, 0, arr, cap ) ;
+    
+    // match keyword with paren enclosed identifier
+    const method = 'matchArr_match';
+    const aspect = 'simple paren keyword';
+    const desc = 'match keyword with simple paren enclosed value';
+    const expected = { keyword: 'overlay', vlu: 'sditno' };
+    const actual = { keyword: cap.keyword, vlu: cap.vlu };
+    testResults_append(results, { desc, method, expected, actual });
+  }
+
+  // matchArr. repeating keyword enclosed values.
+  {
+    const arr: iMatchItem[] = [
+      { oper: 'identifier', captureName: 'keyword', zeroMoreWhitespace: true },
+      { oper: 'text', text: '(', zeroMoreWhitespace: false },
+      { oper: 'repeatBegin', captureName:'args'},
+      { oper: 'identifier', captureName: 'vlu', zeroMoreWhitespace: true },
+      { oper: 'repeatMatchText', zeroMoreWhitespace:true},
+      { oper: 'repeatEnd' },
+      { oper: 'text', text: ')', zeroMoreWhitespace: true },
+    ]
+    const text = 'overlay(sditno)';
+    const cap: iMatchCapture = {};
+    const match = matchArr_match(text, 0, arr, cap);
+
+    // match keyword with paren enclosed identifier
+    const method = 'matchArr_match';
+    const aspect = 'simple paren keyword';
+    const desc = 'match keyword with simple paren enclosed value';
+    const expected = { keyword: 'overlay', vlu: 'sditno' };
+    const actual = { keyword: cap.keyword, vlu: cap.vlu };
+    testResults_append(results, { desc, method, expected, actual });
+  }
+
+
+  return results;
 }
 
 // ---------------------------------- match_test ----------------------------------
@@ -39,8 +100,8 @@ function match_test( )
     const aspect = 'simple paren keyword';
     const desc = 'match keyword with simple paren enclosed value';
     const expected = {keyword:'overlay', vlu:'oditno'};
-    const testResult = { keyword:cap.keyword,vlu:cap.vlu} ;
-    testResults_append(results, { desc, method, expected, testResult });
+    const actual = { keyword:cap.keyword,vlu:cap.vlu} ;
+    testResults_append(results, { desc, method, expected, actual });
   }
 
   // paren enclosed with multiple values.
@@ -63,10 +124,9 @@ function match_test( )
     const aspect = 'simple paren keyword';
     const desc = 'match keyword with simple paren enclosed value';
     const expected = { keyword: 'overlay', vlu: 'oditno' };
-    const testResult = { keyword: cap.keyword, vlu: cap.vlu };
-    testResults_append(results, { desc, method, expected, testResult });
+    const actual = { keyword: cap.keyword, vlu: cap.vlu };
+    testResults_append(results, { desc, method, expected, actual });
   }
-  
 
   return results ;
 }
