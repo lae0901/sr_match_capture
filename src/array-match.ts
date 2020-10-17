@@ -29,6 +29,8 @@ export interface iMatchItem
 // ---------------------------------- iMatchState ----------------------------------
 export interface iMatchState
 {
+  matchArr_index?:number;
+
   // text of string being scanned and matched.
   text:string;
 
@@ -46,6 +48,7 @@ export interface iMatchState
   capture: iMatchCapture;
 
   repeatBegin_arrIndex?: number;
+  repeat_captureName?:string;
 }
 
 // --------------------------------- matchArr_match ---------------------------------
@@ -58,11 +61,12 @@ export function matchArr_match( text: string, bx:number,
   const state: iMatchState = {text, index:bx, found:-1, isMatch:true, matchFail:false, capture:{} };
   if ( capture )
     state.capture = capture ;
+  state.matchArr_index = 0 ;
 
-  while( mx < matchArr.length )
+  while( state.matchArr_index < matchArr.length )
   {
-    const item = matchArr[mx] ;
-    mx += 1 ;
+    const item = matchArr[ state.matchArr_index ] ;
+    state.matchArr_index += 1 ;
 
     if ( item.oper == 'identifier')
     {
@@ -82,7 +86,6 @@ export function matchArr_match( text: string, bx:number,
     }
     else if ( item.oper == 'repeatEnd')
     {
-
     }
   }
   return state ;
@@ -162,11 +165,13 @@ function match_repeatBegin(state: iMatchState, item: iMatchItem, arrIndex:number
 
     // index into matchArr of this repeatBegin item.
     state.repeatBegin_arrIndex = arrIndex ;
+    state.repeat_captureName = '' ;
 
     // start capture property as an array
     if ( item.captureName )
     {
       state.capture[item.captureName] = [] ;
+      state.repeat_captureName = item.captureName;
     }
   }
 }
@@ -411,10 +416,28 @@ function processMatchTrue( state:iMatchState, item: iMatchItem, bx: number, lx: 
       state.index = bx + lx;
 
     // capture the matched text.
+    const match_text = state.text.substr(bx, lx).trim();
+
+    // capture to property in capture object.
     if ( item.captureName)
     {
-      const match_text = state.text.substr(bx, lx).trim();
       state.capture[item.captureName] = match_text;
+    }
+
+    // repeat capture. Capture to array in capture object.
+    if ( item.doCapture && state.repeat_captureName )
+    {
+      const vlu = state.capture[state.repeat_captureName];
+      if ( Array.isArray(vlu))
+      {
+        vlu.push(match_text) ;
+      }
+    }
+
+    // repeatMatch. set instruction array index back to start of repeat.
+    if (  item.oper == 'repeatMatchText')
+    {
+      state.matchArr_index = state.repeatBegin_arrIndex! + 1 ;
     }
   }
 }

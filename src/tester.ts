@@ -58,8 +58,8 @@ function arrayMatch_test()
       { oper: 'identifier', captureName: 'keyword', zeroMoreWhitespace: true },
       { oper: 'text', text: '(', zeroMoreWhitespace: false },
       { oper: 'repeatBegin', captureName:'args'},
-      { oper: 'identifier', captureName: 'vlu', zeroMoreWhitespace: true },
-      { oper: 'repeatMatchText', zeroMoreWhitespace:true},
+      { oper: 'identifier', doCapture:true, zeroMoreWhitespace: true },
+      { oper: 'repeatMatchText', text:':', zeroMoreWhitespace:true},
       { oper: 'repeatEnd' },
       { oper: 'text', text: ')', zeroMoreWhitespace: true },
     ]
