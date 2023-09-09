@@ -1,7 +1,7 @@
 import {testResults_append, testResults_consoleLog, testResults_new } from 'sr_test_framework';
 import { MatchCapture, captureItem_interface, MatchCapture_options, captureObject_interface,
           iMatchCapture, iMatchItem, matchArr_match }
-  from './match-capture';
+  from './match-capture.js';
 
 // run main function that is declared as async. 
 async_main( ) ;

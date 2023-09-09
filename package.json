@@ -1,12 +1,14 @@
 {
   "name": "sr_match_capture",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "match-capture typescript class",
+  "type": "module",
   "main": "lib/match-capture.js",
   "types": "lib/match-capture.d.ts",
   "scripts": {
     "test": "node ./lib/tester.js",
     "build": "tsc",
+    "watch": "tsc -w",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json"
   },
@@ -26,7 +28,9 @@
   },
   "devDependencies": {
     "@types/node": "^14.11.10",
+    "nodemon": "^3.0.1",
     "sr_test_framework": "^1.0.15",
+    "ts-node": "^10.9.1",
     "typescript": "^4.0.3"
   }
 }
