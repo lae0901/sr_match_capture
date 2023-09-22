@@ -110,7 +110,7 @@ function match_test( )
     testResults_append(results, { desc, method, expected, actual });
   }
 
-  // paren enclosed with multiple identifiers.
+  // paren enclosed with repeating identifiers.
   {
     const text = 'overlay(oditno:steve)';
     let tm = new MatchCapture(text, 0, {});

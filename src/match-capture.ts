@@ -171,6 +171,7 @@ export class MatchCapture
   // doCapture: if true, capture to the capture_array of the parent.
   // see the captureBegin and captureEnd methods.
   captureName?: string ;
+  captureRepeatable?: boolean ;  // captured value repeats. the capture property is an array.
   doCapture?: boolean ;
 
   // capture_object and capture_array of this MatchCapture. 
@@ -651,7 +652,7 @@ public angleBracketName(options?: MatchCapture_options)
         this.index = bx + lx;
 
       // the matched text.
-      const match_text = this.text.substr(bx, lx).trim( ) ;
+      const match_text = this.text.substring(bx, bx + lx).trim( ) ;
       if ( options.captureName || options.doCapture == true )
         this.store_capture({bx, lx, name:options.captureName, text:match_text}, options.doCapture ) ;
 
@@ -1176,7 +1177,7 @@ public ruxRoutine( userRoutine: ( matchCapture:MatchCapture, ix:number) => void 
       let ix = this.index;
       while (ix < this.text.length)
       {
-        const ch1 = this.text.substr(ix, 1);
+        const ch1 = this.text.substring(ix, ix + 1);
         if ((ch1 == ' ') || (ch1 == '\t') || (ch1 == '\n'))
         {
           ix += 1;
