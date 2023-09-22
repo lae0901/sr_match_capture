@@ -1,10 +1,13 @@
 {
   "name": "sr_match_capture",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "match-capture typescript class",
   "type": "module",
   "main": "lib/match-capture.js",
   "types": "lib/match-capture.d.ts",
+  "files": [
+    "/lib/*.*"
+  ],
   "scripts": {
     "test": "node ./lib/tester.js",
     "build": "tsc",
