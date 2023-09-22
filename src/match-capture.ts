@@ -104,7 +104,7 @@ export interface MatchCapture_options
   isRepeatRun?:boolean;
   noIncSeqn?: boolean ;
   peek?: boolean;
-  peekNextText?: string,
+  peekNextText?: string | string[],
   peekNextNotText?:string;
   repeatable?: boolean;
   skipSetup?: boolean;
@@ -831,7 +831,7 @@ public angleBracketName(options?: MatchCapture_options)
       {
         const matchItem = match[mx];
         const peekLx = matchItem.length;
-        if ((peekLx <= remLx) && (text.substr(ix, peekLx) == matchItem))
+        if ((peekLx <= remLx) && (text.substring(ix, ix + peekLx) == matchItem))
         {
           peekTrue = true;
           break;
