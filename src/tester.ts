@@ -110,6 +110,30 @@ function match_test( )
     testResults_append(results, { desc, method, expected, actual });
   }
 
+  // paren enclosed with multiple identifiers.
+  {
+    const text = 'overlay(oditno:steve)';
+    let tm = new MatchCapture(text, 0, {});
+    tm.identifier({ zeroMoreWhitespace: true, captureName: 'keyword' });
+    tm.matchText('(', { zeroMoreWhitespace: false });
+
+    const tm2 = tm.captureBegin({ captureName: 'args', repeatable: true });
+    tm2.identifier({ zeroMoreWhitespace: true })
+    tm2.repeatMatchText(':', { zeroMoreWhitespace: true })
+    tm = tm2.captureEnd();
+
+    tm.matchText(')', { zeroMoreWhitespace: true });
+
+    const cap = tm.capture_object;
+
+    const method = 'MatchCapture';
+    const aspect = 'multiple identifiers';
+    const desc = 'match keyword with multiple paren enclosed identifiers';
+    const expected = { keyword: 'overlay', vlu: 'oditno' };
+    const actual = { keyword: cap.keyword, vlu: cap.vlu };
+    testResults_append(results, { desc, method, expected, actual });
+  }
+
   // paren enclosed with multiple values.
   {
     const text = 'overlay(oditno:25)';

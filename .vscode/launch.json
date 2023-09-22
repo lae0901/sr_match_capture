@@ -10,6 +10,7 @@
       "request": "launch",
       "name": "run tester",
       "program": "${workspaceFolder}\\src\\tester.ts",
+      "preLaunchTask": "npm: build",
       "outFiles": [
         "${workspaceFolder}/lib/**/*.js"
       ]
