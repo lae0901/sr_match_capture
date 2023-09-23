@@ -607,7 +607,7 @@ public angleBracketName(options?: MatchCapture_options)
         const lx = matchText.length;
         if (remLx < lx)
           this.isMatch = false;
-        else if (this.text.substr(ix, lx) == matchText)
+        else if (this.text.substring(ix, ix + lx) == matchText)
         {
           this.match_processMatchTrue(options, ix, lx);
         }
@@ -794,7 +794,7 @@ public angleBracketName(options?: MatchCapture_options)
       let ix = this.index;
       while (ix < this.text.length)
       {
-        const ch1 = this.text.substr(ix, 1);
+        const ch1 = this.text[ix];
         if ((ch1 == ' ') || (ch1 == '\t') || (ch1 == '\n'))
         {
           ix += 1;
