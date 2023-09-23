@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "publish package",
+      "type": "shell",
+      "command": "npm publish",
+      "detail": "build, then publish package to npm"
+    },
+    {
+      "label": "build project",
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build then publish",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "build project",
+        "publish package"
+      ],
+      /* problemMatcher suppresses vscode prompt when running the task.  */
+      "problemMatcher": []
+    }
+  ]
+}
