@@ -114,23 +114,49 @@ function match_test( )
   {
     const text = 'overlay(oditno:steve)';
     let tm = new MatchCapture(text, 0, {});
-    tm.identifier({ zeroMoreWhitespace: true, captureName: 'keyword' });
-    tm.matchText('(', { zeroMoreWhitespace: false });
-
-    const tm2 = tm.captureBegin({ captureName: 'args', repeatable: true });
-    tm2.identifier({ zeroMoreWhitespace: true })
-    tm2.repeatMatchText(':', { zeroMoreWhitespace: true })
-    tm = tm2.captureEnd();
-
-    tm.matchText(')', { zeroMoreWhitespace: true });
+    const tm3 = tm.captureBegin({ captureName: 'funcCall' });
+    tm3.identifier({ zeroMoreWhitespace: true, captureName: 'funcName' });
+    tm3.matchText('(', { zeroMoreWhitespace: false });
+    tm3.identifier({ zeroMoreWhitespace: true, captureName: 'args', repeatable: true });
+    tm3.repeatMatchText(':', { zeroMoreWhitespace: true })
+    tm3.matchText(')', { zeroMoreWhitespace: true });
+    tm = tm3.captureEnd();
 
     const cap = tm.capture_object;
+    const {funcCall} = cap;
+    const funcName = funcCall ? funcCall.funcName : undefined;
+    const args = funcCall ? funcCall.args : undefined;
 
     const method = 'MatchCapture';
     const aspect = 'multiple identifiers';
     const desc = 'match keyword with multiple paren enclosed identifiers';
-    const expected = { keyword: 'overlay', vlu: 'oditno' };
-    const actual = { keyword: cap.keyword, vlu: cap.vlu };
+    const expected = { funcName:'overlay', args:['oditno','steve']};
+    const actual = { funcName, args };
+    testResults_append(results, { desc, method, expected, actual });
+  }
+
+  // paren enclosed with repeating literal/identifiers.
+  {
+    const text = 'overlay(oditno:"steve")';
+    let tm = new MatchCapture(text, 0, {});
+    const tm3 = tm.captureBegin({ captureName: 'funcCall' });
+    tm3.identifier({ zeroMoreWhitespace: true, captureName: 'funcName' });
+    tm3.matchText('(', { zeroMoreWhitespace: false });
+    tm3.literalOrIdentifier({ zeroMoreWhitespace: true, captureName: 'args', repeatable: true });
+    tm3.repeatMatchText(':', { zeroMoreWhitespace: true })
+    tm3.matchText(')', { zeroMoreWhitespace: true });
+    tm = tm3.captureEnd();
+
+    const cap = tm.capture_object;
+    const { funcCall } = cap;
+    const funcName = funcCall ? funcCall.funcName : undefined;
+    const args = funcCall ? funcCall.args : undefined;
+
+    const method = 'MatchCapture';
+    const aspect = 'multiple literal/identifiers';
+    const desc = 'match keyword with multiple paren enclosed literals/identifiers';
+    const expected = { funcName: 'overlay', args: ['oditno', '"steve"'] };
+    const actual = { funcName, args };
     testResults_append(results, { desc, method, expected, actual });
   }
 

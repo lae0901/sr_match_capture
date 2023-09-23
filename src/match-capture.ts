@@ -59,6 +59,7 @@ export interface captureItem_interface
   lx:number,
   name?: string,
   text?: string,
+  repeatable?: boolean,  // captured value repeats. the capture property is an array.
   obj?: captureObject_interface,
 }
 
@@ -531,6 +532,26 @@ public angleBracketName(options?: MatchCapture_options)
     return this;
   }
 
+  // ---------------------------- literalOrIdentifier -----------------------------------
+  // a quoted or numeric literal or an identifier.
+  // options: { captureName, skipSetup }
+  public literalOrIdentifier(options: MatchCapture_options = {})
+  {
+    const skip = this.instructionSetup();
+    if (skip == false)
+    {
+      const identifier_pattern = rxp.beginCapture + '[A-Za-z_]' + rxp.zeroMoreWord + rxp.endCapture;
+      const digits_pattern = rxp.beginCapture + rxp.oneMoreDigits + rxp.endCapture;
+      const regexp_pattern = identifier_pattern + rxp.or + digits_pattern +
+        rxp.or +
+        rxp.beginCapture + rxp.singleQuoteQuoted + rxp.endCapture +
+        rxp.or + rxp.doubleQuoteQuoted;
+      const opt = { ...options, skipSetup: true };
+      this.matchRegExp(regexp_pattern, opt);
+    }
+    return this;
+  }
+
   // ---------------------- matchText ----------------------
   // match specific text at the current location.
   // options: { captureName, zeroMatchOk, skipSetup, zeroMoreWhitespace:true,
@@ -654,7 +675,10 @@ public angleBracketName(options?: MatchCapture_options)
       // the matched text.
       const match_text = this.text.substring(bx, bx + lx).trim( ) ;
       if ( options.captureName || options.doCapture == true )
-        this.store_capture({bx, lx, name:options.captureName, text:match_text}, options.doCapture ) ;
+      {
+        const {repeatable, captureName, doCapture} = options ;
+        this.store_capture({bx, lx, name:captureName, repeatable, text:match_text}, doCapture ) ;
+      }
 
       // run match code.
       // match code is arrow function.  options:{onMatch:( )=>{cap.assign = true;}}
@@ -701,9 +725,20 @@ public angleBracketName(options?: MatchCapture_options)
         if (matchOx == 0)
         {
           this.match_processMatchTrue(options, matchBx, matchLx);
+
+          // store reference to this method and its parameters. Will be used by
+          // repeatMatch method.
+          if (options && options.repeatable && !options.isRepeatRun)
+          {
+            if (!this.repeat)
+              this.repeat = [];
+            this.repeat.push(
+              { method: this.matchRegExp, parm1:regexp, parm2: options });
+          }
         }
         else
         {
+          // unless zeroMatchOk, set isMatch to false. 
           this.match_processMatchFalse(options);
         }
       }
@@ -1049,11 +1084,23 @@ public ruxRoutine( userRoutine: ( matchCapture:MatchCapture, ix:number) => void 
 
     else
     {
-      const {name:captureName} = item ;
+      const {name:captureName, repeatable} = item ;
       if ( captureName )
       {
-        this.capture_object[captureName] = vlu;
-        this.capture_object.meta[captureName] = item;
+        if ( repeatable == true )
+        {
+          if ( !this.capture_object[captureName] )
+            this.capture_object[captureName] = [] ;
+          this.capture_object[captureName].push( vlu ) ;
+
+          // todo: store meta info for each repeating capture item.
+          this.capture_object.meta[captureName] = item ;
+        }
+        else 
+        {
+          this.capture_object[captureName] = vlu;
+          this.capture_object.meta[captureName] = item;
+        }
       }
     }
   }
